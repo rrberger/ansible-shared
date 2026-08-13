@@ -1,0 +1,29 @@
+FROM rockylinux:9-minimal
+
+# Install SSH server, sudo, python3 (required for Ansible target) and tools
+RUN microdnf update -y && microdnf install -y \
+    openssh-server \
+    sudo \
+    python3 \
+    iputils \
+    curl \
+    && microdnf clean all
+
+# Create ansible user with passwordless sudo privileges
+RUN useradd -m -s /bin/bash ansible && \
+    echo "ansible:ansible" | chpasswd && \
+    echo "ansible ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Set up run directory for SSHD
+RUN mkdir -p /var/run/sshd
+
+# Configure SSHD to support public key auth and log to stdout
+RUN sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
+COPY entrypoints/target-init.sh /usr/local/bin/target-init.sh
+RUN chmod +x /usr/local/bin/target-init.sh
+
+EXPOSE 22
+
+ENTRYPOINT ["/usr/local/bin/target-init.sh"]

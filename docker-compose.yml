@@ -1,0 +1,93 @@
+version: '3.8'
+
+networks:
+  playnet:
+    external: true
+
+services:
+  # 1. Automated Installer to bootstrap AWX Operator and Custom Resource
+  bootstrap:
+    image: alpine/k8s:1.27.4
+    user: root
+    entrypoint: [ "/bin/bash", "/bootstrap.sh" ]
+    volumes:
+      - k3s-shared:/shared:ro
+      - ./entrypoints/bootstrap.sh:/bootstrap.sh:ro
+      - ./awx-instance.yaml:/awx-instance.yaml:ro
+    networks:
+      - playnet
+    restart: unless-stopped
+
+  # 2. Ansible Control Node (Development Playground)
+  ansible-control:
+    build:
+      context: .
+      dockerfile: Dockerfile.control
+    volumes:
+      - ./playground:/playground
+      - ssh-keys:/ssh-shared
+      - k3s-shared:/shared:ro
+      - /var/run/docker.sock:/var/run/docker.sock # Mount host Docker socket for Execution Environments
+    depends_on:
+      - target-ubuntu-1
+      - target-ubuntu-2
+      - target-debian-1
+      - target-rocky-1
+    networks:
+      playnet:
+        ipv4_address: 172.25.0.11
+    restart: unless-stopped
+
+  # 3. SSH Target Node 1 (Ubuntu 24.04)
+  target-ubuntu-1:
+    build:
+      context: .
+      dockerfile: targets/Dockerfile.target-ubuntu24.04
+    volumes:
+      - ssh-keys:/ssh-shared:ro
+    networks:
+      playnet:
+        ipv4_address: 172.25.0.21
+    restart: unless-stopped
+
+  # 4. SSH Target Node 2 (Ubuntu 24.04)
+  target-ubuntu-2:
+    build:
+      context: .
+      dockerfile: targets/Dockerfile.target-ubuntu24.04
+    volumes:
+      - ssh-keys:/ssh-shared:ro
+    networks:
+      playnet:
+        ipv4_address: 172.25.0.22
+    restart: unless-stopped
+
+  # 5. SSH Target Node 3 (Debian 12)
+  target-debian-1:
+    build:
+      context: .
+      dockerfile: targets/Dockerfile.target-debian12
+    volumes:
+      - ssh-keys:/ssh-shared:ro
+    networks:
+      playnet:
+        ipv4_address: 172.25.0.23
+    restart: unless-stopped
+
+  # 6. SSH Target Node 4 (Rocky Linux 9)
+  target-rocky-1:
+    build:
+      context: .
+      dockerfile: targets/Dockerfile.target-rockylinux9
+    volumes:
+      - ssh-keys:/ssh-shared:ro
+    networks:
+      playnet:
+        ipv4_address: 172.25.0.24
+    restart: unless-stopped
+
+volumes:
+  k3s-shared: # Ephemeral volume to share K3s kubeconfig with client containers
+    external: true
+  ssh-keys: # Ephemeral volume to dynamically share generated SSH keys
+

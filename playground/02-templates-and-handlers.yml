@@ -1,0 +1,46 @@
+---
+- name: Demo 2 - Jinja2 Templates and Handlers
+  hosts: targets
+  gather_facts: true
+  vars:
+    target_hostname: "{{ ansible_hostname }}"
+    app_env: "development"
+    app_port: 8080
+    active_services:
+      - webserver
+      - database
+      - queue_worker
+
+  tasks:
+    - name: 1. Deploy the dynamic welcome text file using Jinja2 template
+      ansible.builtin.template:
+        src: templates/welcome.txt.j2
+        dest: /etc/ansible-welcome.txt
+        mode: '0644'
+      notify: Trigger verification task
+      # Handlers are only run if this task reports a "changed" status.
+      # Running the playbook a second time without edits will not trigger the handler.
+
+    - name: 2. Modify a line in the config file to demonstrate lineinfile module
+      ansible.builtin.lineinfile:
+        path: /etc/ansible-welcome.txt
+        regexp: '^Environment: '
+        line: "Environment: {{ app_env | upper }} (MANUALLY OVERRIDDEN BY LINEINFILE)"
+      notify: Trigger verification task
+
+  handlers:
+    - name: Trigger verification task
+      ansible.builtin.debug:
+        msg: "HANDLER TRIGGERED! The configuration file was created or modified. Verifying file..."
+      listen: "Trigger verification task"
+
+    - name: Read and print file contents
+      ansible.builtin.command: cat /etc/ansible-welcome.txt
+      register: welcome_file_contents
+      changed_when: false
+      listen: "Trigger verification task"
+
+    - name: Show the updated configuration output
+      ansible.builtin.debug:
+        msg: "{{ welcome_file_contents.stdout_lines }}"
+      listen: "Trigger verification task"

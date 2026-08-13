@@ -1,0 +1,13 @@
+apiVersion: awx.ansible.com/v1beta1
+kind: AWX
+metadata:
+  name: awx-demo
+  namespace: awx
+spec:
+  # Deploy using NodePort to easily expose the service through the K3s Docker container to the host
+  service_type: NodePort
+  nodeport_port: 30080
+
+  # Persist projects folder to allow uploading playbooks and roles
+  projects_persistence: true
+  projects_storage_access_mode: ReadWriteOnce

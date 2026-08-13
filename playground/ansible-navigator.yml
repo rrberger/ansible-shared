@@ -1,0 +1,16 @@
+ansible-navigator:
+  ansible:
+    config: /playground/ansible.cfg
+    inventories:
+      - /playground/inventory.ini
+  execution-environment:
+    container-engine: docker
+    enabled: true
+    image: quay.io/ansible/creator-ee:v24.2.0
+    pull:
+      policy: missing
+
+  playbook-artifact:
+    enable: false
+  logging:
+    level: critical

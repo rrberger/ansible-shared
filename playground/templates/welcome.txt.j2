@@ -1,0 +1,23 @@
+=========================================
+Welcome to {{ target_hostname }}!
+=========================================
+This node is configured by Ansible.
+
+System Overview:
+- OS Family: {{ ansible_os_family }}
+- OS Distribution: {{ ansible_distribution }} {{ ansible_distribution_version }}
+- Kernel Version: {{ ansible_kernel }}
+- System Time: {{ ansible_date_time.iso8601 }}
+
+Application Status:
+- Environment: {{ app_env | default('Production') | upper }}
+- Configured Port: {{ app_port }}
+
+Managed Services Checklist:
+{% for service in active_services %}
+  [x] {{ service }}
+{% endfor %}
+
+-----------------------------------------
+Last updated: {{ ansible_date_time.date }} at {{ ansible_date_time.time }}
+=========================================

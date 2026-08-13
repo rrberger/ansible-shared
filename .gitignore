@@ -1,0 +1,15 @@
+# Temporary build context & logs
+context/
+*.tar
+*.log
+
+# Environment & credentials
+.env
+vars/secrets.yml
+!vars/secrets.yml.example
+
+# Ansible Artifacts
+*.retry
+.ansible/
+playground/ansible-navigator.log
+playground/ansible-navigator-execution-mode.log

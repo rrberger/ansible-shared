@@ -1,0 +1,26 @@
+---
+- name: Verify Borgmatic Backup Health & Archive Status
+  hosts: targets
+  become: true
+  tasks:
+    - name: Check if borgmatic binary exists
+      ansible.builtin.command: which borgmatic
+      register: borgmatic_check
+      changed_when: false
+      failed_when: false
+
+    - name: Report missing borgmatic installation
+      ansible.builtin.debug:
+        msg: "Borgmatic is NOT installed on {{ inventory_hostname }}"
+      when: borgmatic_check.rc != 0
+
+    - name: Run borgmatic info check (when installed)
+      ansible.builtin.command: borgmatic info --stats
+      register: borgmatic_info
+      changed_when: false
+      when: borgmatic_check.rc == 0
+
+    - name: Display Borgmatic archive statistics
+      ansible.builtin.debug:
+        msg: "{{ borgmatic_info.stdout_lines }}"
+      when: borgmatic_check.rc == 0

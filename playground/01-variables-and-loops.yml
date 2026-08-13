@@ -1,0 +1,61 @@
+---
+- name: Demo 1 - Variables, Loops, and Conditionals
+  hosts: targets
+  gather_facts: true
+  vars:
+    app_name: "Playground Demo App"
+    environment_type: "development"
+    required_services:
+      - nginx
+      - redis-server
+      - memcached
+    user_profiles:
+      - name: alice
+        role: admin
+        shell: /bin/bash
+      - name: bob
+        role: developer
+        shell: /bin/zsh
+      - name: guest_user
+        role: viewer
+        shell: /bin/sh
+
+  tasks:
+    - name: 1. Display simple variables
+      ansible.builtin.debug:
+        msg: "Deploying '{{ app_name }}' on environment: '{{ environment_type }}'"
+
+    - name: 2. Loop over a simple list of required services
+      ansible.builtin.debug:
+        msg: "Required dependency check: {{ item }}"
+      loop: "{{ required_services }}"
+
+    - name: 3. Loop over a list of dictionaries (User Profiles)
+      ansible.builtin.debug:
+        msg: "User '{{ item.name }}' holds role '{{ item.role }}' with default shell '{{ item.shell }}'"
+      loop: "{{ user_profiles }}"
+
+    - name: 4. Conditional execution based on OS Family (Fact Gathering)
+      ansible.builtin.debug:
+        msg: "Host '{{ inventory_hostname }}' runs Red Hat-based Linux (Rocky/CentOS)."
+      when: ansible_os_family == "RedHat"
+
+    - name: 5. Conditional execution based on OS Family for Debian/Ubuntu
+      ansible.builtin.debug:
+        msg: "Host '{{ inventory_hostname }}' runs Debian-based Linux (Ubuntu/Debian)."
+      when: ansible_os_family == "Debian"
+
+    - name: 6. Combining loop and conditional (Only print admin users)
+      ansible.builtin.debug:
+        msg: "ALERT: Found Administrator user: {{ item.name }}"
+      loop: "{{ user_profiles }}"
+      when: item.role == 'admin'
+
+    - name: 7. Register output from a command execution
+      ansible.builtin.command: uname -a
+      register: uname_output
+      changed_when: false
+
+    - name: 8. Print registered command output
+      ansible.builtin.debug:
+        msg: "System information from uname: {{ uname_output.stdout }}"

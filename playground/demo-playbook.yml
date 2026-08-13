@@ -1,0 +1,44 @@
+---
+- name: Ansible Playground Diagnostic Playbook
+  hosts: targets
+  gather_facts: true
+
+  tasks:
+    - name: Display connection and environment info
+      ansible.builtin.debug:
+        msg: >
+          Hello from target {{ ansible_hostname }}!
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Python Version: {{ ansible_python_version }}
+          Control Node IP: {{ ansible_env.SSH_CLIENT | default('Unknown') }}
+
+    - name: Verify passwordless sudo (become) privileges
+      ansible.builtin.command: whoami
+      register: whoami_output
+
+    - name: Display current user inside become context
+      ansible.builtin.debug:
+        msg: "Executing as user: {{ whoami_output.stdout }}"
+
+    - name: Create a playground verification file on targets
+      ansible.builtin.copy:
+        content: |
+          Ansible playground active.
+          Provisioned: {{ ansible_date_time.iso8601 }}
+        dest: /tmp/ansible-playground.txt
+        mode: '0644'
+
+    - name: Read back the verification file
+      ansible.builtin.command: cat /tmp/ansible-playground.txt
+      register: cat_output
+
+    - name: Show file contents
+      ansible.builtin.debug:
+        msg: "{{ cat_output.stdout }}"
+
+    - name: Echo cat
+      shell: |
+        echo "Testing async existence and behavior" 
+        sleep 100
+      async: 300
+      poll: 10

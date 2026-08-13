@@ -1,0 +1,36 @@
+FROM ubuntu:22.04
+
+# Avoid prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies, python, ssh client, and curl
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    openssh-client \
+    python3 \
+    python3-pip \
+    python3-venv \
+    iputils-ping \
+    sudo \
+    sed \
+    docker.io \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install kubectl
+RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && \
+    chmod +x kubectl && \
+    mv kubectl /usr/local/bin/
+
+# Install Ansible CLI and helper utilities
+RUN pip3 install --upgrade pip && \
+    pip3 install ansible ansible-navigator ansible-builder ansible-lint
+
+# Setup playground workspace
+WORKDIR /playground
+
+# Copy initialization script
+COPY entrypoints/control-init.sh /usr/local/bin/control-init.sh
+RUN chmod +x /usr/local/bin/control-init.sh
+
+ENTRYPOINT ["/usr/local/bin/control-init.sh"]

@@ -1,0 +1,58 @@
+---
+- name: Demo 4 - Multi-OS Package, Group, User, and File Management
+  hosts: targets
+  gather_facts: true
+  become: true # Requires sudo privileges to install packages and add users
+
+  tasks:
+    - name: 1. Install system utilities using the generic 'package' manager
+      ansible.builtin.package:
+        name:
+          - curl
+          - htop
+        state: present
+      # 'package' is an abstract module that automatically maps to apt on Debian/Ubuntu,
+      # and dnf/yum on Rocky Linux / RHEL.
+
+    - name: 2. Ensure a custom system group exists
+      ansible.builtin.group:
+        name: devops
+        state: present
+
+    - name: 3. Ensure a custom system user exists with custom shell and groups
+      ansible.builtin.user:
+        name: devops_service
+        group: devops
+        shell: /bin/bash
+        create_home: true
+        comment: "DevOps service account managed by Ansible"
+        state: present
+
+    - name: 4. Ensure an application configuration directory exists
+      ansible.builtin.file:
+        path: /etc/my-custom-app
+        state: directory
+        owner: devops_service
+        group: devops
+        mode: '0750'
+
+    - name: 5. Write a system service config file
+      ansible.builtin.copy:
+        content: |
+          # Managed by Ansible - DO NOT EDIT MANUALLY
+          APP_PORT=9000
+          DB_HOST=127.0.0.1
+          DB_PORT=5432
+        dest: /etc/my-custom-app/config.env
+        owner: devops_service
+        group: devops
+        mode: '0640'
+
+    - name: 6. Verify user creation by listing shadow entry
+      ansible.builtin.command: grep devops_service /etc/passwd
+      register: passwd_check
+      changed_when: false
+
+    - name: 7. Show user information in passwd
+      ansible.builtin.debug:
+        msg: "Passwd record: {{ passwd_check.stdout }}"

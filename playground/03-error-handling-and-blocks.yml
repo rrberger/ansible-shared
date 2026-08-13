@@ -1,0 +1,66 @@
+---
+- name: Demo 3 - Blocks, Error Handling, and Task Control
+  hosts: targets
+  gather_facts: false
+
+  tasks:
+    - name: 1. Demonstration of Blocks, Rescue, and Always blocks
+      block:
+        - name: 1.1 inside block - execute a command that succeeds
+          ansible.builtin.command: ls /tmp
+          register: ls_tmp_out
+          changed_when: false
+          async: 5
+
+        - name: 1.2 inside block - debug printing execution state
+          ansible.builtin.debug:
+            msg: "Completed step 1.1 successfully."
+
+        - name: 1.3 inside block - execute a command that will intentionally fail
+          ansible.builtin.command: ls /directory/that/does/not/exist
+          register: fail_cmd_out
+          async: 5
+
+      rescue:
+        - name: 2.1 inside rescue - this executes only if a task in the block fails
+          ansible.builtin.debug:
+            msg: >
+              CATCHED ERROR! A task inside the block failed. 
+              The failure error was: {{ ansible_failed_result.msg | default('Unknown error') }}
+              We are now executing recovery/fallback tasks.
+
+        - name: 2.2 inside rescue - running fallback command
+          ansible.builtin.command: whoami
+          register: fallback_out
+          changed_when: false
+          async: 5
+
+      always:
+        - name: 3.1 inside always - this task always runs, regardless of success or failure
+          ansible.builtin.debug:
+            msg: "CLEANUP ACTION: This task is executed always (similar to try-finally)."
+
+    - name: 2. Control task statuses (failed_when and changed_when)
+      block:
+        - name: 2.1 Run a custom check and override its failure condition
+          ansible.builtin.command: echo "Database Connection Offline"
+          register: custom_check
+          # Let's say we check database and get an output. If it contains "Offline", we want to fail.
+          failed_when: "'Offline' in custom_check.stdout"
+          changed_when: false
+          ignore_errors: true # Continue playbook execution even if this fails so we can see next steps
+
+        - name: 2.2 Show task output if we ignored the failure
+          ansible.builtin.debug:
+            msg: "The check failed but we ignored it using 'ignore_errors: true'."
+
+        - name: 2.3 Run a command that prints output but doesn't modify state
+          ansible.builtin.command: hostname
+          register: host_check
+          # By default, ansible.builtin.command ALWAYS reports "changed: true".
+          # We override it here because printing the hostname changes nothing.
+          changed_when: false
+
+        - name: 2.4 Print execution status
+          ansible.builtin.debug:
+            msg: "Host check returned: {{ host_check.stdout }} (reported change: false)"
