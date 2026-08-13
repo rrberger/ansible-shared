@@ -229,6 +229,10 @@ ansible-shared/
 
 ## 💻 Using the Ansible Control Node CLI
 
+> [!NOTE]
+> **Note on `ansible-ansible-control` vs. AWX:**
+> `ansible-ansible-control` is **not** part of AWX itself. AWX executes its jobs inside dedicated Execution Environment pods managed by K3s. The `ansible-control` container is a standalone sandbox provided in this environment to give you a local CLI command center to run `ansible-navigator`, build images with `ansible-builder`, or interact with `kubectl`.
+
 You can execute playbooks directly from the command line inside the Ansible Control container.
 
 ### 1. Connect to the Control Node
