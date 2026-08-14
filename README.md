@@ -1,6 +1,6 @@
 # 🚀 Ansible AWX & Automation Controller Homelab Environment
 
-This repository provides a self-contained, enterprise-grade Ansible playground designed to mirror the capabilities of **Red Hat Ansible Automation Platform (AAP)** and **AWX (Automation Controller)** in a local homelab.
+This playground environment is designed to have a home lab experience that is similar to utilizing **Red Hat Ansible Automation Platform (AAP)** by using the open source version, **AWX**. It provides a local, self-contained lab on my Mini-PC (Linux Mint) home lab machine. I am using Ansible to maintain my home lab, although those Playbooks are *not* public for obvious reasons. Hopefully this helps you get started. Enjoy!
 
 ---
 
