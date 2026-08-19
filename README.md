@@ -7,6 +7,23 @@ This playground environment is designed to have a home lab experience that is si
 3. **An Ansible Control Node** preloaded with Ansible CLI, `ansible-navigator` (the modern container-based play runner), `ansible-builder`, `ansible-lint`, and `kubectl`.
 4. **Two Managed Target Containers (`target1`, `target2`)** configured with SSH, Python, and passwordless sudo privileges for running test playbooks.
 5. **Dynamic Key Provisioning** where SSH keys are created automatically on startup—no hardcoded passwords or keys are used.
+6. **AI Coding Assistance & Zen of Ansible Skills** pre-configured for Antigravity ([`.agents/skills/ansible-authoring/SKILL.md`](.agents/skills/ansible-authoring/SKILL.md)) and Claude ([`.claude/SKILLS.md`](.claude/SKILLS.md)) enforcing FQCN, strict idempotency, `async:` timeouts, and Red Hat repository directory standards.
+
+---
+
+## 🤖 AI Coding Assistance & Skills (`ansible-authoring`)
+
+This repository includes pre-built AI pair programming skills configured for **Google Antigravity** and **Claude** following **The Zen of Ansible** and Red Hat Ansible Automation Platform (AAP) best practices:
+
+* **Antigravity Skill Location**: [`.agents/skills/ansible-authoring/SKILL.md`](.agents/skills/ansible-authoring/SKILL.md)
+* **Claude Skill / System Memory**: [`.claude/SKILLS.md`](.claude/SKILLS.md) & [`.claude/skills/ansible-authoring/SKILL.md`](.claude/skills/ansible-authoring/SKILL.md)
+
+### Key Rules Enforced by the Skill:
+1. **Mandatory FQCN**: All tasks require Fully Qualified Collection Names (e.g. `ansible.builtin.copy`, `community.hashi_vault.vault_kv2_get`).
+2. **Strict Idempotency**: All `command` and `shell` tasks require `changed_when:` guards.
+3. **Async Timeouts**: All `command` and `shell` tasks require `async:` timeouts so commands never hang indefinitely.
+4. **Forbidden External Remote Scripts**: Scripts (`.sh`, `.ps1`) must exist inside the git project repository or be written inline—execution from external NFS/SMB file shares is forbidden.
+5. **Red Hat Standard Directory Layout**: Enforces official AAP project directory structure (`group_vars/`, `host_vars/`, `roles/`, `playbooks/`, `rulebooks/`).
 
 ---
 
