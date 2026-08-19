@@ -34,9 +34,10 @@ This skill provides a standardized framework and scaffolding for authoring clean
    - Never hardcode dynamic configuration parameters inside playbooks.
    - Store variables in `vars/`, `defaults/main.yml`, or pass them via AWX / EDA extra vars.
 
-6. **Proper Secret Hygiene**
+6. **Proper Secret Hygiene & `no_log` Scoping**
    - Never embed plain-text credentials, SSH private keys, API tokens, or passwords in playbooks or git repositories.
    - Use HashiCorp Vault lookup modules (`community.hashi_vault`) or Ansible Vault encryption.
+   - Apply `no_log: true` on tasks that register or output sensitive data to prevent secret leakage in job stdout logs.
 
 7. **Script Execution Hygiene & Local Repository Scoping**
    - NEVER execute scripts (Bash `.sh` or PowerShell `.ps1`) directly from external remote file shares (e.g., SMB/CIFS, NFS, UNC paths `\\server\share`, or arbitrary HTTP downloads).
@@ -62,9 +63,9 @@ This skill provides a standardized framework and scaffolding for authoring clean
 
 ---
 
-## 🤝 Red Hat Community of Practice (CoP) Good Practices
+## 🤝 [Red Hat Community of Practice (CoP) Good Practices](https://redhat-cop.github.io/automation-good-practices/)
 
-Adhere to the official [Red Hat CoP Automation Good Practices](https://redhat-cop.github.io/automation-good-practices/):
+Adhere to the official Red Hat CoP Automation Good Practices framework:
 
 12. **Role Variable Namespacing (Role Prefix Rule)**
     - All variables defined inside a role MUST be prefixed with the role name (e.g. inside `roles/nginx`, use `nginx_port`, `nginx_conf_dir`, `nginx_user` instead of generic `port` or `conf_dir`). This prevents variable scope collision across plays.
@@ -75,10 +76,16 @@ Adhere to the official [Red Hat CoP Automation Good Practices](https://redhat-co
     - Always quote Jinja2 template expressions at the start of a value (`dest: "{{ config_path }}"`) to prevent YAML parser syntax errors.
     - Use explicit boolean values (`true` / `false` in lowercase) instead of `yes` / `no`.
 
-14. **Loop Result Registration Hygiene (`register` in loops)**
-    - When registering the output of a loop task (`register: task_loop`), remember that `task_loop` becomes an object containing a `.results` list array. Access results via `task_loop.results` item loops rather than scalar `.stdout`.
+14. **Minimal Privilege Escalation (`become` Scoping)**
+    - Avoid setting `become: true` globally at the play level unless 100% of tasks require root. Apply `become: true` strictly to individual tasks that require elevated privileges to uphold the principle of least privilege.
 
-15. **Single Responsibility Principle for Roles (SRP)**
+15. **Strict Collection Version Pinning**
+    - Always pin exact or semver compatible version specifications in `collections/requirements.yml` (`version: ">=1.5.0,<2.0.0"`) rather than using wildcard `version: "*"`, preventing unexpected breaking changes during EE image builds.
+
+16. **Loop Result Registration Hygiene (`register` in loops)**
+    - When registering the output of a loop task (`register: task_loop`), remember that `task_loop` becomes an object containing a `.results` list array. Access results via `task_loop.results` item loops rather than expecting a scalar `.stdout`.
+
+17. **Single Responsibility Principle for Roles (SRP)**
     - A role must perform one focused architectural function. Avoid multi-purpose monolithic roles (e.g. separate `roles/nginx` from `roles/php_fpm`).
 
 ---
@@ -89,9 +96,9 @@ Adhere to the official **Red Hat Ansible Automation Platform (AAP)** directory l
 
 ```text
 ansible-project/
-├── ansible.cfg                     # Local Ansible configuration
+├── ansible.cfg                     # Local Ansible configuration (stdout_callback = yaml, retry_files_enabled = False)
 ├── collections/
-│   └── requirements.yml            # Galaxy collections specification
+│   └── requirements.yml            # Galaxy collections specification (version pinned)
 ├── docs/                           # Architecture & workflow documentation
 ├── execution_environments/
 │   └── execution-environment.yml   # ansible-builder v3 specification
@@ -106,7 +113,7 @@ ansible-project/
 ├── roles/                          # Reusable Ansible Roles (Galaxy / AAP standard)
 │   └── webserver/
 │       ├── defaults/
-│       │   └── main.yml            # Default low-priority variables
+│       │   └── main.yml            # Default low-priority variables (prefixed with role_name_)
 │       ├── files/                  # Static files deployed via copy module
 │       ├── handlers/
 │       │   └── main.yml            # Role-specific service handlers
@@ -132,7 +139,7 @@ ansible-project/
 - name: "Descriptive Play Title (e.g. Configure Web Application Server)"
   hosts: "all"
   gather_facts: true
-  become: true
+  become: false # Use task-level privilege escalation where possible
 
   vars:
     app_port: 8080
@@ -152,6 +159,7 @@ ansible-project/
           - "curl"
           - "htop"
         state: "present"
+      become: true
 
     - name: "Ensure application service configuration directory exists"
       ansible.builtin.file:
@@ -160,6 +168,7 @@ ansible-project/
         owner: "root"
         group: "root"
         mode: "0755"
+      become: true
 
     - name: "Deploy application configuration from Jinja2 template"
       ansible.builtin.template:
@@ -168,6 +177,7 @@ ansible-project/
         owner: "root"
         group: "root"
         mode: "0644"
+      become: true
       notify: "Restart application service"
 
     - name: "Execute repository-scoped script using ansible.builtin.script"
@@ -182,12 +192,14 @@ ansible-project/
         name: "myapp"
         state: "{{ app_service_state }}"
         enabled: true
+      become: true
 
   handlers:
     - name: "Restart application service"
       ansible.builtin.service:
         name: "myapp"
         state: "restarted"
+      become: true
 ```
 
 ---
@@ -229,6 +241,7 @@ When prompting AI assistants to author playbooks:
 - [ ] **Require async timeouts**: Ensure `ansible.builtin.command` and `ansible.builtin.shell` tasks specify `async:` timeouts so they do not run forever.
 - [ ] **Forbidden Remote Script Execution**: Ensure script files (.sh, .ps1) exist inside the git repo or are inline, never executed from remote file shares (NFS/SMB/UNC).
 - [ ] **Require Handlers for Changes**: Ensure file/template edits trigger handlers (`notify:`) rather than restarting services inline.
+- [ ] **Enforce Task-Level Become**: Scope `become: true` at task level rather than globally at play level.
 - [ ] **Enforce Snake Case & Role Namespacing**: Use `snake_case` for variables and prefix role variables with `role_name_`.
 - [ ] **Define Variable Contracts**: List inputs at top under `vars:` with default values and assertion checks.
 - [ ] **Run Lint Verification**: Validate generated code using `ansible-lint <file.yml>`.
