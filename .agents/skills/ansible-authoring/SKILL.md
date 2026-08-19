@@ -17,9 +17,11 @@ This skill provides a standardized framework and scaffolding for authoring clean
    - Playbooks should read like self-documenting human English.
    - If a task requires complex inline bash scripts or nested conditionals, break it into dedicated tasks, roles, or custom modules.
 
-2. **Strict Idempotency**
+2. **Strict Idempotency & Safety Guards**
    - Every play and task must be safe to execute 1, 10, or 1,000 times without producing unexpected side-effects or duplicate configuration.
-   - When using `ansible.builtin.command` or `ansible.builtin.shell`, ALWAYS specify `changed_when:` and `creates:` / `removes:` criteria.
+   - When using `ansible.builtin.command` or `ansible.builtin.shell`:
+     - ALWAYS specify `changed_when:` and `creates:` / `removes:` criteria.
+     - ALWAYS specify `async:` (e.g. `async: 30` or appropriate timeout) for `command` and `shell` tasks to ensure commands never hang or block play execution forever.
 
 3. **Declarative State Over Imperative Scripting**
    - Express *what target state you desire*, not *how to step-by-step run shell commands*.
@@ -125,6 +127,13 @@ ansible-project/
         mode: "0644"
       notify: "Restart application service"
 
+    - name: "Execute custom diagnostic check with async timeout"
+      ansible.builtin.command: /usr/local/bin/check_myapp_health.sh
+      register: health_check
+      changed_when: false
+      async: 30
+      poll: 5
+
     - name: "Ensure application service is enabled and running"
       ansible.builtin.service:
         name: "myapp"
@@ -174,6 +183,7 @@ ansible-project/
 
 When prompting AI assistants to author playbooks:
 - [ ] **Specify FQCN**: Require `ansible.builtin.<module>` for all tasks.
+- [ ] **Require async timeouts**: Ensure `ansible.builtin.command` and `ansible.builtin.shell` tasks specify `async:` timeouts so they do not run forever.
 - [ ] **Require Handlers for Changes**: Ensure file/template edits trigger handlers (`notify:`) rather than restarting services inline.
 - [ ] **Define Variable Contracts**: List inputs at top under `vars:` with default values and assertion checks.
 - [ ] **Run Lint Verification**: Validate generated code using `ansible-lint <file.yml>`.
