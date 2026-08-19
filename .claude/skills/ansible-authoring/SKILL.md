@@ -44,6 +44,22 @@ This document provides standardized guidelines and scaffolding for authoring cle
      - Exist directly within the version-controlled project repository (e.g. under `files/` or `scripts/`) and be executed via `ansible.builtin.script` or `ansible.builtin.copy`.
      - Be written inline directly inside the playbook task (e.g. using `ansible.builtin.shell` or `ansible.windows.win_powershell`).
 
+8. **Service Restarts via Handlers Only (Avoid Inline Restarts)**
+   - **Anti-Pattern**: Triggering service restarts directly in tasks (`ansible.builtin.service: state=restarted`) whenever a file edit occurs. If 10 tasks edit 10 config files, the service will restart 10 times during a single playbook execution!
+   - **Red Hat Best Practice**: Always use `notify: "Restart service_name"` to defer service restarts to `handlers:`. Ansible will batch all notifications and restart the service **exactly once** at the end of the play run.
+
+9. **Variable Naming Conventions & Snake Case**
+   - **Anti-Pattern**: Using camelCase (`myAppPort`), hyphens (`my-app-port`), or UPPERCASE variables for non-constants.
+   - **Red Hat Best Practice**: Use lowercase `snake_case` for all variable names (`app_port`, `target_package`, `vault_addr`). Reserve UPPERCASE for system environment variables (`VAULT_TOKEN`, `DEBIAN_FRONTEND`).
+
+10. **Explicit Error Handling Over Blanket `ignore_errors`**
+    - **Anti-Pattern**: Using `ignore_errors: true` as a shortcut when commands fail.
+    - **Red Hat Best Practice**: Use `failed_when:` to explicitly define what output or return code constitutes a failure, or handle expected failures with `block`/`rescue`/`always` error handling.
+
+11. **Task Naming Quality & Verb Mandate**
+    - **Anti-Pattern**: Task names like `name: nginx`, `name: copy file`, or missing `name:` fields entirely.
+    - **Red Hat Best Practice**: Every task must have a unique `name:` starting with an imperative verb describing the intent (`name: "Ensure Nginx package is installed"`, `name: "Deploy web server configuration template"`).
+
 ---
 
 ## 📁 Red Hat Standard Directory & File Structure
@@ -192,5 +208,6 @@ When prompting AI assistants to author playbooks:
 - [ ] **Require async timeouts**: Ensure `ansible.builtin.command` and `ansible.builtin.shell` tasks specify `async:` timeouts so they do not run forever.
 - [ ] **Forbidden Remote Script Execution**: Ensure script files (.sh, .ps1) exist inside the git repo or are inline, never executed from remote file shares (NFS/SMB/UNC).
 - [ ] **Require Handlers for Changes**: Ensure file/template edits trigger handlers (`notify:`) rather than restarting services inline.
+- [ ] **Enforce Snake Case**: Use `snake_case` for all variable names (`app_port`, `target_package`).
 - [ ] **Define Variable Contracts**: List inputs at top under `vars:` with default values and assertion checks.
 - [ ] **Run Lint Verification**: Validate generated code using `ansible-lint <file.yml>`.
