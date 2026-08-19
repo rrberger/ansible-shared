@@ -62,6 +62,27 @@ This skill provides a standardized framework and scaffolding for authoring clean
 
 ---
 
+## 🤝 Red Hat Community of Practice (CoP) Good Practices
+
+Adhere to the official [Red Hat CoP Automation Good Practices](https://redhat-cop.github.io/automation-good-practices/):
+
+12. **Role Variable Namespacing (Role Prefix Rule)**
+    - All variables defined inside a role MUST be prefixed with the role name (e.g. inside `roles/nginx`, use `nginx_port`, `nginx_conf_dir`, `nginx_user` instead of generic `port` or `conf_dir`). This prevents variable scope collision across plays.
+
+13. **YAML Formatting & Jinja2 Expression Quoting**
+    - Always begin YAML files with `---`.
+    - Use strict 2-space indentation (no tabs).
+    - Always quote Jinja2 template expressions at the start of a value (`dest: "{{ config_path }}"`) to prevent YAML parser syntax errors.
+    - Use explicit boolean values (`true` / `false` in lowercase) instead of `yes` / `no`.
+
+14. **Loop Result Registration Hygiene (`register` in loops)**
+    - When registering the output of a loop task (`register: task_loop`), remember that `task_loop` becomes an object containing a `.results` list array. Access results via `task_loop.results` item loops rather than scalar `.stdout`.
+
+15. **Single Responsibility Principle for Roles (SRP)**
+    - A role must perform one focused architectural function. Avoid multi-purpose monolithic roles (e.g. separate `roles/nginx` from `roles/php_fpm`).
+
+---
+
 ## 📁 Red Hat Standard Directory & File Structure
 
 Adhere to the official **Red Hat Ansible Automation Platform (AAP)** directory layout for repositories and roles:
@@ -208,6 +229,6 @@ When prompting AI assistants to author playbooks:
 - [ ] **Require async timeouts**: Ensure `ansible.builtin.command` and `ansible.builtin.shell` tasks specify `async:` timeouts so they do not run forever.
 - [ ] **Forbidden Remote Script Execution**: Ensure script files (.sh, .ps1) exist inside the git repo or are inline, never executed from remote file shares (NFS/SMB/UNC).
 - [ ] **Require Handlers for Changes**: Ensure file/template edits trigger handlers (`notify:`) rather than restarting services inline.
-- [ ] **Enforce Snake Case**: Use `snake_case` for all variable names (`app_port`, `target_package`).
+- [ ] **Enforce Snake Case & Role Namespacing**: Use `snake_case` for variables and prefix role variables with `role_name_`.
 - [ ] **Define Variable Contracts**: List inputs at top under `vars:` with default values and assertion checks.
 - [ ] **Run Lint Verification**: Validate generated code using `ansible-lint <file.yml>`.
