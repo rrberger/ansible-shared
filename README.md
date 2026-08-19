@@ -13,7 +13,7 @@ This playground environment is designed to have a home lab experience that is si
 
 ## 🤖 AI Coding Assistance & Skills (`ansible-authoring`)
 
-This repository includes pre-built AI pair programming skills configured for **Google Antigravity** and **Claude** following **The Zen of Ansible** and Red Hat Ansible Automation Platform (AAP) best practices:
+This repository includes pre-built AI pair programming skills configured for **Google Antigravity** and **Claude** following [The Zen of Ansible](https://www.redhat.com/en/blog/the-zen-of-ansible) and [Red Hat CoP Automation Good Practices](https://redhat-cop.github.io/automation-good-practices/):
 
 * **Antigravity Skill Location**: [`.agents/skills/ansible-authoring/SKILL.md`](.agents/skills/ansible-authoring/SKILL.md)
 * **Claude Skill / System Memory**: [`.claude/SKILLS.md`](.claude/SKILLS.md) & [`.claude/skills/ansible-authoring/SKILL.md`](.claude/skills/ansible-authoring/SKILL.md)
@@ -24,6 +24,7 @@ This repository includes pre-built AI pair programming skills configured for **G
 3. **Async Timeouts**: All `command` and `shell` tasks require `async:` timeouts so commands never hang indefinitely.
 4. **Forbidden External Remote Scripts**: Scripts (`.sh`, `.ps1`) must exist inside the git project repository or be written inline—execution from external NFS/SMB file shares is forbidden.
 5. **Red Hat Standard Directory Layout**: Enforces official AAP project directory structure (`group_vars/`, `host_vars/`, `roles/`, `playbooks/`, `rulebooks/`).
+6. **Red Hat CoP Standards**: Enforces role variable namespacing (`role_name_var`), YAML quoting, and single responsibility roles.
 
 ---
 

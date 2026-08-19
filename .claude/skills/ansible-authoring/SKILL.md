@@ -11,7 +11,7 @@ This document provides standardized guidelines and scaffolding for authoring cle
 
 ---
 
-## 🧘 The Zen of Ansible Core Principles
+## 🧘 [The Zen of Ansible Core Principles](https://www.redhat.com/en/blog/the-zen-of-ansible)
 
 1. **Simplicity Over Complexity**
    - Playbooks should read like self-documenting human English.
