@@ -38,6 +38,48 @@ This document provides standardized guidelines and scaffolding for authoring cle
 
 ---
 
+## 📁 Red Hat Standard Directory & File Structure
+
+Adhere to the official **Red Hat Ansible Automation Platform (AAP)** directory layout for repositories and roles:
+
+```text
+ansible-project/
+├── ansible.cfg                     # Local Ansible configuration
+├── collections/
+│   └── requirements.yml            # Galaxy collections specification
+├── docs/                           # Architecture & workflow documentation
+├── execution_environments/
+│   └── execution-environment.yml   # ansible-builder v3 specification
+├── group_vars/                     # Group-level variable files (e.g. all.yml, webservers.yml)
+├── host_vars/                      # Host-specific variable overrides (e.g. mini-lab.yml)
+├── inventory/                      # Production & staging inventory files (or inventory.ini)
+│   ├── production.ini
+│   └── staging.ini
+├── playbooks/                      # Orchestration & automation playbooks
+│   ├── 01-site-setup.yml
+│   └── 02-maintenance.yml
+├── roles/                          # Reusable Ansible Roles (Galaxy / AAP standard)
+│   └── webserver/
+│       ├── defaults/
+│       │   └── main.yml            # Default low-priority variables
+│       ├── files/                  # Static files deployed via copy module
+│       ├── handlers/
+│       │   └── main.yml            # Role-specific service handlers
+│       ├── meta/
+│       │   └── main.yml            # Role metadata & collection dependencies
+│       ├── tasks/
+│       │   └── main.yml            # Role task execution entry point
+│       ├── templates/              # Jinja2 configuration templates (.j2)
+│       └── vars/
+│           └── main.yml            # High-priority role variables
+├── rulebooks/                      # Event-Driven Ansible (EDA) rulebook definitions
+│   └── hello_world_rulebook.yml
+└── vars/
+    └── secrets.yml.example         # Secret variable templates
+```
+
+---
+
 ## 🏗️ Production Playbook Scaffolding Template
 
 ```yaml
