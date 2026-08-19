@@ -1,0 +1,38 @@
+apiVersion: eda.ansible.com/v1alpha1
+kind: EDA
+metadata:
+  name: eda-demo
+  namespace: eda
+spec:
+  # Deploy using NodePort to easily expose the service through the K3s Docker container to the host
+  service_type: NodePort
+  nodeport_port: 30083
+
+  # Public base URL for EDA Controller
+  public_base_url: "http://<SERVER_IP>:8083"
+
+  # Connect EDA Controller to the internal AWX cluster service
+  automation_server_url: "http://awx-demo-service.awx.svc.cluster.local"
+
+  # Explicit Admin user and secret definition
+  admin_user: admin
+  admin_password_secret: eda-demo-admin-password
+
+  # Complete environment override settings for CSRF, Cookie Security, and Allowed Hosts
+  extra_settings:
+    - setting: CSRF_TRUSTED_ORIGINS
+      value: "['http://localhost:8083', 'http://127.0.0.1:8083', 'http://<SERVER_IP>:8083']"
+    - setting: EDA_CSRF_TRUSTED_ORIGINS
+      value: "['http://localhost:8083', 'http://127.0.0.1:8083', 'http://<SERVER_IP>:8083']"
+    - setting: ALLOWED_HOSTS
+      value: "['*']"
+    - setting: EDA_ALLOWED_HOSTS
+      value: "['*']"
+    - setting: SESSION_COOKIE_SECURE
+      value: "False"
+    - setting: EDA_SESSION_COOKIE_SECURE
+      value: "False"
+    - setting: CSRF_COOKIE_SECURE
+      value: "False"
+    - setting: EDA_CSRF_COOKIE_SECURE
+      value: "False"

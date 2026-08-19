@@ -1,0 +1,21 @@
+---
+- name: Hello World Event-Driven Ansible Rulebook
+  hosts: all
+
+  # Native EDA Event Stream source (routes directly through EDA Controller on port 8083!)
+  sources:
+    - ansible.eda.event_stream:
+
+  rules:
+    - name: Trigger AWX Job Template on Ping Event
+      condition: event.payload.message == "ping"
+      action:
+        run_job_template:
+          name: "Check Disk Space"
+          organization: "Home Lab"
+
+    - name: Log Received Webhook Payload
+      condition: event.payload.message is defined
+      action:
+        debug:
+          msg: "Received event payload from webhook: {{ event.payload }}"

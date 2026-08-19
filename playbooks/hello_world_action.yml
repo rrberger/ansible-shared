@@ -1,0 +1,14 @@
+---
+- name: Hello World Action Playbook
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Print Hello World Greeting
+      ansible.builtin.debug:
+        msg: "🎉 Hello World from Event-Driven Ansible! Triggered by event: {{ event.payload | default({}) }}"
+
+    - name: Display Event Timestamp
+      ansible.builtin.debug:
+        msg: "Event received successfully at {{ ansible_date_time.iso8601 | default('now') }}"

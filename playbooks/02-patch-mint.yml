@@ -1,6 +1,6 @@
 ---
-- name: Patch Linux Host Packages & Kernel Updates
-  hosts: targets
+- name: Patch Linux Mint host
+  hosts: mini-lab
   become: true
   vars:
     patch_action: "update"
@@ -61,6 +61,6 @@
           - " UPGRADE REPORT FOR: {{ inventory_hostname }}"
           - "=========================================="
           - " Status          : {{ 'Packages Upgraded Successfully!' if apt_upgrade_result.changed else 'System was already up to date.' }}"
-          - " Reboot Required : {{ 'YES - Please reboot target host' if reboot_required_file.stat.exists else 'NO' }}"
+          - " Reboot Required : {{ 'YES - Please manually reboot mini-lab' if reboot_required_file.stat.exists else 'NO' }}"
           - "=========================================="
       when: patch_action | lower == 'upgrade'

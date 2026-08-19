@@ -1,24 +1,26 @@
 ---
-- name: Disk Space Verification & Health Diagnostic
+- name: Check disk usage playbook
   hosts: all
-  become: false
   tasks:
-    - name: Gather filesystem disk usage facts
-      ansible.builtin.setup:
-        filter: "ansible_mounts"
+    - name: Check disk usage
+      ansible.builtin.command: df -h /
+      register: disk_check
+      changed_when: false
 
-    - name: Display disk mounts and free space summary
+    - name: Extract disk metrics
+      ansible.builtin.set_fact:
+        disk_details: "{{ disk_check.stdout_lines[1].split() }}"
+
+    - name: Display human-readable disk status
       ansible.builtin.debug:
         msg:
-          - "=========================================="
-          - " DISK USAGE REPORT: {{ inventory_hostname }}"
-          - "=========================================="
-          - " Mount Point : {{ item.mount }}"
-          - " Filesystem  : {{ item.fstype }}"
-          - " Total Size  : {{ (item.size_total / 1024 / 1024 / 1024) | round(2) }} GB"
-          - " Available   : {{ (item.size_available / 1024 / 1024 / 1024) | round(2) }} GB"
-          - " Use Percent : {{ (((item.size_total - item.size_available) / item.size_total) * 100) | round(1) }} %"
-          - "=========================================="
-      loop: "{{ ansible_mounts }}"
-      loop_control:
-        label: "{{ item.mount }}"
+          - "========================================"
+          - " DISK REPORT FOR: {{ inventory_hostname }}"
+          - "========================================"
+          - " Filesystem : {{ disk_details[0] }}"
+          - " Total Size : {{ disk_details[1] }}"
+          - " Used Space : {{ disk_details[2] }}"
+          - " Available  : {{ disk_details[3] }}"
+          - " Usage %    : {{ disk_details[4] }}"
+          - " Mount Point: {{ disk_details[5] }}"
+          - "========================================"

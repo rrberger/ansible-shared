@@ -1,5 +1,3 @@
-version: '3.8'
-
 networks:
   playnet:
     external: true
@@ -14,6 +12,9 @@ services:
       - k3s-shared:/shared:ro
       - ./entrypoints/bootstrap.sh:/bootstrap.sh:ro
       - ./awx-instance.yaml:/awx-instance.yaml:ro
+      - ./eda-instance.yaml:/eda-instance.yaml:ro
+      - ./eda-operator-static.yaml:/eda-operator-static.yaml:ro
+      - ./playground/scripts/fix-eda-login.sh:/fix-eda-login.sh:ro
     networks:
       - playnet
     restart: unless-stopped

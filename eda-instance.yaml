@@ -1,0 +1,50 @@
+apiVersion: eda.ansible.com/v1alpha1
+kind: EDA
+metadata:
+  name: eda-demo
+  namespace: eda-server-operator-system
+spec:
+  # NodePort service configuration mapped to Host Port 8083
+  service_type: NodePort
+  nodeport_port: 30083
+
+  # Public base URL of EDA Controller
+  public_base_url: "http://<SERVER_IP>:8083"
+
+  # Internal AWX automation controller URL
+  automation_server_url: "http://awx-demo-service.awx.svc.cluster.local"
+
+  # Admin user and password secret reference
+  admin_user: admin
+  admin_password_secret: eda-demo-admin-password
+
+  # Settings for Web UI session login & CSRF verification
+  extra_settings:
+    - setting: EDA_CSRF_TRUSTED_ORIGINS
+      value: "http://<SERVER_IP>:8083,http://<SERVER_IP>,http://localhost:8083,http://eda-demo-api:8000,http://eda-demo-api"
+    - setting: CSRF_TRUSTED_ORIGINS
+      value: "http://<SERVER_IP>:8083,http://<SERVER_IP>,http://localhost:8083,http://eda-demo-api:8000,http://eda-demo-api"
+    - setting: RESOURCE_SERVER__URL
+      value: "@none"
+    - setting: EDA_RESOURCE_SERVER__URL
+      value: "@none"
+    - setting: EVENT_STREAM_REQUIRE_TRUSTED_PROXY
+      value: "@bool false"
+    - setting: EDA_EVENT_STREAM_REQUIRE_TRUSTED_PROXY
+      value: "@bool false"
+    - setting: EVENT_STREAM_DB_HOST
+      value: "eda-demo-postgres-15"
+    - setting: EDA_EVENT_STREAM_DB_HOST
+      value: "eda-demo-postgres-15"
+    - setting: ALLOW_LOCAL_RESOURCE_MANAGEMENT
+      value: "True"
+    - setting: EDA_ALLOW_LOCAL_RESOURCE_MANAGEMENT
+      value: "True"
+    - setting: SESSION_COOKIE_SECURE
+      value: "False"
+    - setting: EDA_SESSION_COOKIE_SECURE
+      value: "False"
+    - setting: CSRF_COOKIE_SECURE
+      value: "False"
+    - setting: EDA_CSRF_COOKIE_SECURE
+      value: "False"

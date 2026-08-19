@@ -1,9 +1,8 @@
 #!/bin/bash
 
 # AWX API Multi-Tool Script
-AWX_HOST="${AWX_HOST:-http://localhost:8080}"
-TOKEN="${AWX_TOKEN:-<YOUR_AWX_BEARER_TOKEN>}"
-
+AWX_HOST="${AWX_HOST:-http://<SERVER_IP>:8080}"
+TOKEN="${AWX_TOKEN:-U3P0Gyffo6cqMtdf0S3WxetvDblTpd}"
 
 # Helper function: HTTP GET
 api_get() {

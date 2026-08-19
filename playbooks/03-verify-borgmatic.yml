@@ -1,26 +1,20 @@
 ---
-- name: Verify Borgmatic Backup Health & Archive Status
-  hosts: targets
+- name: Verify Borgmatic Backup Status
+  hosts: mini-lab
   become: true
   tasks:
-    - name: Check if borgmatic binary exists
-      ansible.builtin.command: which borgmatic
-      register: borgmatic_check
-      changed_when: false
-      failed_when: false
+    - name: Read Borgmatic backup status file
+      ansible.builtin.slurp:
+        src: /var/lib/docker/volumes/k3s-data/_data/backup_status.json
+      register: raw_status
 
-    - name: Report missing borgmatic installation
-      ansible.builtin.debug:
-        msg: "Borgmatic is NOT installed on {{ inventory_hostname }}"
-      when: borgmatic_check.rc != 0
+    - name: Parse status JSON
+      ansible.builtin.set_fact:
+        backup_data: "{{ raw_status.content | b64decode | from_json }}"
 
-    - name: Run borgmatic info check (when installed)
-      ansible.builtin.command: borgmatic info --stats
-      register: borgmatic_info
-      changed_when: false
-      when: borgmatic_check.rc == 0
-
-    - name: Display Borgmatic archive statistics
-      ansible.builtin.debug:
-        msg: "{{ borgmatic_info.stdout_lines }}"
-      when: borgmatic_check.rc == 0
+    - name: Check if backup was successful
+      ansible.builtin.assert:
+        that:
+          - backup_data.status == "success"
+        fail_msg: "Last Borgmatic backup failed! Timestamp: {{ backup_data.timestamp }}"
+        success_msg: "Borgmatic backup succeeded at {{ (backup_data.timestamp | int > 0) | ternary(('%Y-%m-%d %H:%M:%S' | strftime(backup_data.timestamp | int)), backup_data.timestamp) }}"
