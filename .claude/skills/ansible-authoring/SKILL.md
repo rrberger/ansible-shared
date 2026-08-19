@@ -38,6 +38,12 @@ This document provides standardized guidelines and scaffolding for authoring cle
    - Never embed plain-text credentials, SSH private keys, API tokens, or passwords in playbooks or git repositories.
    - Use HashiCorp Vault lookup modules (`community.hashi_vault`) or Ansible Vault encryption.
 
+7. **Script Execution Hygiene & Local Repository Scoping**
+   - NEVER execute scripts (Bash `.sh` or PowerShell `.ps1`) directly from external remote file shares (e.g., SMB/CIFS, NFS, UNC paths `\\server\share`, or arbitrary HTTP downloads).
+   - All scripts MUST either:
+     - Exist directly within the version-controlled project repository (e.g. under `files/` or `scripts/`) and be executed via `ansible.builtin.script` or `ansible.builtin.copy`.
+     - Be written inline directly inside the playbook task (e.g. using `ansible.builtin.shell` or `ansible.windows.win_powershell`).
+
 ---
 
 ## 📁 Red Hat Standard Directory & File Structure
@@ -127,8 +133,8 @@ ansible-project/
         mode: "0644"
       notify: "Restart application service"
 
-    - name: "Execute custom diagnostic check with async timeout"
-      ansible.builtin.command: /usr/local/bin/check_myapp_health.sh
+    - name: "Execute repository-scoped script using ansible.builtin.script"
+      ansible.builtin.script: "files/check_myapp_health.sh"
       register: health_check
       changed_when: false
       async: 30
@@ -184,6 +190,7 @@ ansible-project/
 When prompting AI assistants to author playbooks:
 - [ ] **Specify FQCN**: Require `ansible.builtin.<module>` for all tasks.
 - [ ] **Require async timeouts**: Ensure `ansible.builtin.command` and `ansible.builtin.shell` tasks specify `async:` timeouts so they do not run forever.
+- [ ] **Forbidden Remote Script Execution**: Ensure script files (.sh, .ps1) exist inside the git repo or are inline, never executed from remote file shares (NFS/SMB/UNC).
 - [ ] **Require Handlers for Changes**: Ensure file/template edits trigger handlers (`notify:`) rather than restarting services inline.
 - [ ] **Define Variable Contracts**: List inputs at top under `vars:` with default values and assertion checks.
 - [ ] **Run Lint Verification**: Validate generated code using `ansible-lint <file.yml>`.
