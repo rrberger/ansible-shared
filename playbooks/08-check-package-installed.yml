@@ -1,0 +1,46 @@
+---
+- name: Search Managed Hosts for Installed Package Status
+  hosts: all
+  gather_facts: true
+  become: false
+
+  vars:
+    # Target package name to query across managed hosts (override via extra_vars: -e "target_package=git")
+    target_package: "curl"
+
+  tasks:
+    - name: "Validate input variable contract"
+      ansible.builtin.assert:
+        that:
+          - target_package is defined
+          - target_package | length > 0
+        fail_msg: "The 'target_package' variable must be defined and non-empty."
+        success_msg: "Target package parameter '{{ target_package }}' validated."
+
+    - name: "Gather installed package facts"
+      ansible.builtin.package_facts:
+        manager: "auto"
+
+    - name: "Evaluate package installation status"
+      ansible.builtin.set_fact:
+        is_installed: "{{ target_package in ansible_facts.packages }}"
+        installed_version: "{{ ansible_facts.packages[target_package][0].version if (target_package in ansible_facts.packages) else 'N/A' }}"
+        installed_release: "{{ ansible_facts.packages[target_package][0].release if (target_package in ansible_facts.packages and 'release' in ansible_facts.packages[target_package][0]) else 'N/A' }}"
+
+    - name: "Display human-readable package audit report"
+      ansible.builtin.debug:
+        msg:
+          - "=================================================="
+          - " INSTALLED PACKAGE AUDIT FOR: {{ inventory_hostname }}"
+          - "=================================================="
+          - " Target Package  : {{ target_package }}"
+          - " Installed Status: {{ 'INSTALLED ✅' if is_installed else 'NOT INSTALLED ❌' }}"
+          - " Package Version : {{ installed_version }}"
+          - " Release Info    : {{ installed_release }}"
+          - " Operating System: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "=================================================="
+
+    - name: "Summary verification alert"
+      ansible.builtin.debug:
+        msg: "ALERT: Host '{{ inventory_hostname }}' is missing required package '{{ target_package }}'!"
+      when: not is_installed
