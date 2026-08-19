@@ -10,6 +10,40 @@ This playground environment is designed to have a home lab experience that is si
 
 ---
 
+## Deployed Container Stack Reference
+
+This playground consists of host-level Docker Compose services and Kubernetes pod workloads running inside K3s. Below is the complete inventory of containers powering AWX and Event-Driven Ansible (EDA):
+
+### 1. Host-Level Docker Compose Stack
+| Container Service | Base Image / Dockerfile | Purpose |
+| :--- | :--- | :--- |
+| `bootstrap` | `alpine/k8s:1.27.4` | Automated orchestrator container that deploys AWX & EDA Operators into K3s. |
+| `ansible-control` | `Dockerfile.control` (Debian 12) | Local development sandbox preloaded with Ansible CLI, `ansible-navigator`, `ansible-builder`, and `kubectl`. |
+| `target-ubuntu-1` & `2` | `targets/Dockerfile.target-ubuntu24.04` | Ubuntu 24.04 SSH managed target containers. |
+| `target-debian-1` | `targets/Dockerfile.target-debian12` | Debian 12 SSH managed target container. |
+| `target-rocky-1` | `targets/Dockerfile.target-rockylinux9` | Rocky Linux 9 SSH managed target container. |
+
+### 2. AWX Controller Workloads (Namespace: `awx`)
+| Container / Pod | Container Image | Purpose |
+| :--- | :--- | :--- |
+| `awx-operator` | `quay.io/ansible/awx-operator:2.19.1` | Kubernetes operator managing AWX Custom Resource lifecycle. |
+| `awx-demo-web` | `quay.io/ansible/awx-web:24.6.1` | AWX Web UI and REST API service (Port `8080`). |
+| `awx-demo-task` | `quay.io/ansible/awx-task:24.6.1` | AWX task engine, job dispatcher, and receptor controller. |
+| `awx-demo-postgres-15-0` | `postgres:15` | Dedicated PostgreSQL database for AWX configuration & job history. |
+| `awx-ee` | `quay.io/ansible/awx-ee:24.6.1` | Default Execution Environment worker container launched per job. |
+
+### 3. EDA Controller Workloads (Namespace: `eda-server-operator-system`)
+| Container / Pod | Container Image | Purpose |
+| :--- | :--- | :--- |
+| `eda-server-operator` | `quay.io/ansible/eda-server-operator:1.0.2` | Kubernetes operator managing EDA Custom Resource lifecycle. |
+| `eda-demo-api` | `quay.io/ansible/eda-server-api:1.0.2` | EDA Controller REST API service & database manager. |
+| `eda-demo-ui` | `quay.io/ansible/eda-server-ui:1.0.2` | Event-Driven Ansible Web UI (Port `8083`). |
+| `eda-demo-daphne` | `quay.io/ansible/eda-server-daphne:1.0.2` | Daphne ASGI WebSocket gateway for `ansible-rulebook` communication. |
+| `eda-demo-postgres-15-0` | `postgres:15` | Dedicated PostgreSQL database for EDA event streams & activations. |
+| `activation-job-1-XX` | `quay.io/ansible/ansible-rulebook:latest` | Active rule engine pod executing `ansible-rulebook` and matching events. |
+
+---
+
 ## Prerequisites
 
 > [!IMPORTANT]
